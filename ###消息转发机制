@@ -1,19 +1,21 @@
 ###消息转发机制
 
-消息转发分为两大步：
-第一步：在自身响应者链中寻找对应的IMP
-第二步：进行完整消息转发
+####obj_sendMsg()
+消息转发是在接受者本身和继承体系中没有匹配到合适方法体的情况下被触发调用的。
 
+先在该对象isa指向的元类中寻找。首先查找缓存方法列表，找不到则直接查找方法列表，方法列表没有则沿着父类链查找，找到则调动IMP，找不到则进入第二步进行完整消息转发。
 
-第一步中：
+消息转发分为三步：
 
-现在该对象isa指向的元类中寻找。首先查找缓存方法列表，找不到则直接查找方法列表，方法列表没有则沿着父类链查找，找到则调动IMP，找不到则进入第二步进行完整消息转发。
+####1.动态方法解析：征询接受者所属的类，是否能动态添加方法，以处理当前选择子
 
-第二步中：
-1.调用resolveInstanceMethod:,类方法则调用resolveClassMethod:,这里可以有机会给该类addMethod来重新进行第一步响应该消息。
+调用resolveInstanceMethod:,类方法则调用resolveClassMethod:,这里可以有机会给该类addMethod来重新进行第一步响应该消息。
 
-2.调用forwardTargetForSelector:,可以有机会修改响应selector的target，再次进行第一步
+####2.询问接受者是否有其它的对象能处理该选择子，有则运行期系统会把消息转发给那个对象。
 
-3.调用forwardInvocation：,可以有机会修改Invocation的方法签名和响应者。
+调用forwardTargetForSelector:,可以有机会修改响应selector的target，再次进行第一步
 
-4.如果还是找不到对应的IMP，则直接调用doseNotRecongnier方法
+####3.启动完整消息转发，把与有关信息全部组装在NSInvocation中，通过修改Invocation的信息体，尝试转发处理。
+调用forwardInvocation：,可以有机会修改Invocation的方法签名和响应者。
+
+####4.如果还是找不到对应的IMP，则直接调用doesNotRecongnizeSelector方法。
