@@ -1,0 +1,9 @@
+###Runtime
+
+####关联对象
+
+####swizzling
+1.isa swizzling 
+2.method swizzling
+
+####属性遍历，字典和model转换

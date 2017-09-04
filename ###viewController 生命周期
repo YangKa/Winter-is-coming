@@ -1,0 +1,31 @@
+###viewController 生命周期
+
+####+load
+运行时加载类时调用，只调用一次，一般只用于调试、记录日志用
+
+####-init / -initWithNibName:bundle
+类每次实例化对象时调用
+
+####-loadView
+实例化时，将类相关资源加载到内存时调用
+
+####-viewDidLoad
+资源加载到内存完成
+
+####-viewWillAppear
+准备将当前view加到superView上
+
+####-viewDidiAppear
+
+//多次调用
+####- viewWillLayoutSubviews
+
+####- viewDidLayoutSubviews
+
+
+####- viewwillDisappear
+准备将当前view从superView上remove
+
+####- viewDidDisappear
+
+####-dealloc
