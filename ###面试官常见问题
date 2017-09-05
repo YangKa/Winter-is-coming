@@ -1,0 +1,38 @@
+
+常见问题：
+
+###页面流畅度
+主要是列表的流畅度
+不规则列表，类似天猫首页，采用scrollView使用瀑布流动态布局
+tableview
+规则列表   
+动态列表
+
+###MVVM 
+将和model相关的业务逻辑从controller中转移到viewmodel中，采用的是fat model方式。
+
+###架构优化：
+1.工程树机构的清晰化
+2.代码结构化
+3.层次化、组件化、模块化，减少模块间的耦合度
+
+###网络优化：
+socket的使用
+网络缓存使用
+
+###Instruments
+检查流畅度 core animation 检测FPS
+内存泄露 leaks
+耗时检测 Time profiler 
+电量检测 energy log
+僵尸对象 zombies
+
+###内存泄露
+资源得不到释放
+循环引用、野指针、Core foundation中c对象
+
+runtime
+
+常用：关联对象、swizzling、模型转换
+
+用于消息转发、日志记录
