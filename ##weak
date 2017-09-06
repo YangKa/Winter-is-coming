@@ -1,0 +1,11 @@
+##weak
+
+###runtime
+
+//使用weak变量时
+id objc_loadWeak(id *location)
+
+//添加weak记录到weak 表
+//location为weak对象的指针
+//weak对象
+id objc_storeWeak(id *location, id obj) 

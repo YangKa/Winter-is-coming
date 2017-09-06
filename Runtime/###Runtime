@@ -1,9 +1,38 @@
 ###Runtime
 
-####关联对象
+####常用功能
+- 1.使用关联对象(AssociateObject)添加属性。主要用于category。
+- 2.method swizzling，实现方法交换。可用于hook、日志记录。
+- 3.isa swizzling。KVO实现原理。
+- 4.属性遍历、修改、添加属性。
+- 5.实现model和字典的转换。（MJExtension的原理）
 
-####swizzling
-1.isa swizzling 
-2.method swizzling
+####1.关联对象(AssociateObject)
 
-####属性遍历，字典和model转换
+//和属性管理语言一致。
+typedef OBJC_ENUM(uintptr_t, objc_AssociationPolicy) {
+    OBJC_ASSOCIATION_ASSIGN = 0,          
+    OBJC_ASSOCIATION_RETAIN_NONATOMIC = 1, 
+    OBJC_ASSOCIATION_COPY_NONATOMIC = 3,   
+    OBJC_ASSOCIATION_RETAIN = 01401,      
+    OBJC_ASSOCIATION_COPY = 01403          
+};
+
+//关联对象
+objc_setAssociatedObject(id object, const void *key, id value, objc_AssociationPolicy policy)
+
+//获取关联对象
+objc_getAssociatedObject(id object, const void *key)
+
+//移除所以关联对象
+objc_removeAssociatedObjects(id object)
+
+- note：移除关联属性时防止移除其他对象添加的属性，应该使用nil设置objc_setAssociatedObject去重置已经关联的对象。
+
+####2.method swizzling
+
+####3.isa swizzling
+
+####4.属性访问编辑
+
+####5.字典和model转换
