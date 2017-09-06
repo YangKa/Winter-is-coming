@@ -16,7 +16,7 @@
 
 ###总结：
 优：
-1.NSThread创建简单，使用方面。
+1.NSThread创建简单，使用方便。
 2.NSThread常用的是获取当前线程[NSThread currentThread]。
 缺：
 1.但对于多线程的管理需要手动管理，加锁，一般不使用。
