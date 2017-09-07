@@ -1,0 +1,28 @@
+socketRockt笔记
+assert(condition);//和swift中guard类似，条件符合则过，不符合则直接终止程序
+NSAssert（condition, ""）;//条件不符合则打印错误提示并结束程序
+
+//向指定队列里面设置一个标识
+dispatch_queue_set_specific(dispatch_queue_t queue, const void *key,
+	void *_Nullable context, dispatch_function_t _Nullable destructor);
+//取出队列标识
+dispatch_get_specific(const void *key);
+
+
+//socket的状态只能前行，不能后退。
+- (void)setReadyState:(SRReadyState)aReadyState;
+{
+    assert(aReadyState > _readyState);
+    _readyState = aReadyState;
+}
+
+//对于没有返回参数和执行参数的，可以直接使用dispatch_block_t。
+dispatch_block_t
+
+
+
+建立可读写数据流
+
+启动超时试题验证
+
+开启连接

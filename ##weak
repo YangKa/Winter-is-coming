@@ -1,5 +1,9 @@
 ##weak
 
+代表非拥有关系，当weak对象销毁时，weak指针自动置nil。
+
+运行时维护这一个weak列表，以weak指向对象的地址作为key，指向对象作为value。当指向对象销毁是会访问这个列表，将对于的weak指针都置为kong。
+
 ###runtime
 
 //使用weak变量时
@@ -9,3 +13,25 @@ id objc_loadWeak(id *location)
 //location为weak对象的指针
 //weak对象
 id objc_storeWeak(id *location, id obj) 
+
+###循环引用
+打破环路：
+1.在block中使用外部weak对象。
+2.对于一次性生命周期的block，在block使用结束后将block置空。
+
+###weak单例
+
++ (instancetype)share{
+	
+	static __weak SingletonObject *weakSingleton;
+	SingletonObject *strongSingleton = weakSingleton;
+
+	@synchronized (self) {
+		if(!strongSingleton){
+			strongSingleton = [[[self class] alloc] init];
+			weakSingleton = strongSingleton;
+		}
+	}
+	
+	return strongSingleton;
+}
