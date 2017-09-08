@@ -19,10 +19,154 @@ dispatch_get_specific(const void *key);
 //对于没有返回参数和执行参数的，可以直接使用dispatch_block_t。
 dispatch_block_t
 
+//初始化SocketRocket对象
+- 创建一个池 SRIOConsumerPool,
+- 用CFNetwork创建一个连接到服务器的可读写流，通过
+	第一步：创建一个连接到服务器的可读写流
+	unit32_t port = _url.port.unsignedIntValue;
+	NSString *host = _url.host;
+	CFReadStreamRef readStream = NULL;
+	CFWriteStreamRef writeStream = NULL;
+
+	//不会创建一个socket连接，也不会解析域名地址，直到你手动open任意一个stream
+	CFStreamCreatePairWithSocketToHost(NULL, (__bridge CFStringRef)host, port, &readStream, &writeStream);
+
+	第二步：指给OC对象：
+	NSInputStream *inputStream;
+	NSOutputStream *outputStream;
+
+	inputStream = CFBridgeRelease( readStream );
+	outputStream = CFBridgeRelease( writeStream );
+
+	//设置代理监听I/O流变化
+	inputStream.delegate = self;
+	outputStream.delegate = self;
+
+//NSStream
+可以通过NSStream直接建立socket连接，但提供的API只支持ios8+，所以采用底层CFNetwork框架连接。
+但仍然使用继承NSStream的NSOutputStream和NSInputStream对象来进行操作。
+
+只要借助代理NSStreamDelegate协议来实现流事件的监听，达到TCP数据的收发。
+@protocol NSStreamDelegate <NSObject>
+@optional
+- (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode;
+@end
 
 
-建立可读写数据流
+//open方法
+1.启动超时错误提示验证
+2.开启连接
+	1.配置连接安全设置
+	2.根据request的网络类型，设置输入输出流的networkServiceType
+	3.为stream配置执行runloop
+	4.调用inputStream和outputStream的open方法
 
-启动超时试题验证
+3.对连接结果进行处理
+	1.安全验证
+	2.连接状态处理
 
-开启连接
+4.建立连接
+	1.创建CFHTTPMessageRef，并添加Host
+	2.生成安全字符串secKey
+	3.添加cookies到headFields
+	4.添加Authorization、Upgrade、Connection、Sec-WebSocket-Key、Sec-WebSocket-Version、Origin
+	5.添加协议Sec-WebSocket-Protocol
+	6.添加request中的headFields
+	7.将CFHTTPMessageRef转成data
+	8.将data添加到输出缓存容器并通过 `_writeData：`发送出去 （发送成功并响应后连接才可用，现在只是连接建立成功）
+	9.调用HTTPHeader循环读取
+
+5.接收数据
+	1.在连接建立发送组装的HTTPHeadFields后，创建监听接收数据的扫描响应流stream_scanner
+	```
+		- (void)_readHTTPHeader{
+		    if (_receivedHTTPHeaders == NULL) {
+		        _receivedHTTPHeaders = CFHTTPMessageCreateEmpty(NULL, NO);
+		    }
+		                        
+		    [self _readUntilHeaderCompleteWithCallback:^(SRWebSocket *self,  NSData *data) {
+		        CFHTTPMessageAppendBytes(_receivedHTTPHeaders, (const UInt8 *)data.bytes, data.length);
+		        
+		        if (CFHTTPMessageIsHeaderComplete(_receivedHTTPHeaders)) {
+		            SRFastLog(@"Finished reading headers %@", CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(_receivedHTTPHeaders)));
+		            [self _HTTPHeadersDidFinish];
+		        } else {
+		            [self _readHTTPHeader];
+		        }
+		    }];
+		}
+
+		static const char CRLFCRLFBytes[] = {'\r', '\n', '\r', '\n'};
+		- (void)_readUntilHeaderCompleteWithCallback:(data_callback)dataHandler;
+		{
+		    [self _readUntilBytes:CRLFCRLFBytes length:sizeof(CRLFCRLFBytes) callback:dataHandler];
+		}
+
+		- (void)_readUntilBytes:(const void *)bytes length:(size_t)length callback:(data_callback)dataHandler;
+		{
+		    // TODO optimize so this can continue from where we last searched
+		    stream_scanner consumer = ^size_t(NSData *data) {
+		        __block size_t found_size = 0;
+		        __block size_t match_count = 0;
+		        
+		        size_t size = data.length;
+		        const unsigned char *buffer = data.bytes;
+		        for (size_t i = 0; i < size; i++ ) {
+		            if (((const unsigned char *)buffer)[i] == ((const unsigned char *)bytes)[match_count]) {
+		                match_count += 1;
+		                if (match_count == length) {
+		                    found_size = i + 1;
+		                    break;
+		                }
+		            } else {
+		                match_count = 0;
+		            }
+		        }
+		        return found_size;
+		    };
+		    [self _addConsumerWithScanner:consumer callback:dataHandler];
+		}
+
+	```
+	2.创建扫描轮询器SRIOConsumerPool，并添加到轮询器列表中
+
+	- (void)_addConsumerWithScanner:(stream_scanner)consumer callback:(data_callback)callback dataLength:(size_t)dataLength;
+	{    
+	    [self assertOnWorkQueue];
+	    [_consumers addObject:[_consumerPool consumerWithScanner:consumer handler:callback bytesNeeded:dataLength readToCurrentFrame:NO unmaskBytes:NO]];
+	    [self _pumpScanner];
+	}
+
+	3，开启轮询 
+
+	-(void)_pumpScanner;
+	{
+	    [self assertOnWorkQueue];
+	    
+	    if (!_isPumping) {
+	        _isPumping = YES;
+	    } else {
+	        return;
+	    }
+	    
+	    while ([self _innerPumpScanner]) {
+	        
+	    }
+	    
+	    _isPumping = NO;
+	}
+
+	4.第一次接收到数据，修稿socket状态为连接打开 SR_OPEN
+
+	5.continue读取数据
+
+	6.读取的数据根据message(textFrame、binaryFrame)、ping、pong、connectionClose几种类型。
+	7.接收数据如果不是命令帧，则重新读取新帧，否则持续读取数据
+
+5.发送数据
+	1.创建数据frame， 默认长度为数据字节长度+默认32位头部长度
+	2.组装数据和其它信息到frame，通过 `_writeData：`发送出去
+
+
+
+
