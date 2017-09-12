@@ -1,0 +1,8 @@
+##CADisplayLink
+
+CADisplay与NSTimer有什么不同
+
+1.CADispalyLink与屏幕刷新频率一致，精确度高。
+  NSTimer会由于加入runloop被阻塞而推迟，也可以通过设置tolerance属性设置容忍延迟范围。
+2.CADisplayLink使用场景专一，适合UI的不停重绘，比如自定义动画引擎或者视频播放的渲染。
+  NSTimer使用范围比较广泛，用于各种定时任务。

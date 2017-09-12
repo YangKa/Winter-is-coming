@@ -1,0 +1,5 @@
+##锁
+锁：
+dispatch_semaphore
+
+pthread_mutex

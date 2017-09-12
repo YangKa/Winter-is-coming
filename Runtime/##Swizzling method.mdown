@@ -1,0 +1,24 @@
+##Swizzling method
+- (void)load{
+	dstatic ispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+
+		Class class = [self class];
+
+		SEL originSEL = @selector(viewWillAppear:);
+		SEL hookSEL = @selector(hook_viewWillAppear:);
+
+		Method originMethod = class_getInstanceMethod(class, originSEL);
+		Method hookMethod = class_getInstanceMethod(class, hookSEL);
+
+		BOOL didAddMethod = class_addMethod(class, originSEL, method_getImplementation(hookMethod), method_getTypeEncoding(hookMethod));
+
+		if (didAddMethod)
+		{
+			class_replaceMethod(class, hookSEL, method_getImplementation(originMethod), method_getTypeEncoding(originMethod));
+		}else{
+
+			method_exchangeImplementations(originMethod, hookMethod);
+		}
+	});
+}

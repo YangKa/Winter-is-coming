@@ -1,0 +1,9 @@
+##autoReleasePool
+
+每个线程会在它的每个 event loop 开始前，系统会自动创建一个 autoreleasepool ，并在 event loop 结束时 drain 。
+
+需要我们手动添加 autoreleasepool 的：
+
+如果你编写的程序不是基于 UI 框架的，比如说命令行工具；
+如果你编写的循环中创建了大量的临时对象；
+如果你创建了一个辅助线程。
