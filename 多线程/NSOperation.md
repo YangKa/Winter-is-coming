@@ -79,3 +79,9 @@ note：对于子类化中添加的方法，我们也要保证这些方法的线�
 1.线程安全
 2.queue中异步执行
 3.可以操作依赖，设置优先级
+
+###NSOperation是否能取消
+NSOperationQueue中正在执行的任务（状态为isExecuting）是不能直接通过cancel或cancelAllOperation来取消的，只能取消在wait状态的任务。
+
+1.通过在任务执行代码中不断检测当前queue的状态来判断是否直接结束。
+2.继承NSOperation，重写main方法，这个方法会自动加入AutoReleasepool来管理内存。通过在这个方法中判断self.iscancelled来决定是否立刻结束。

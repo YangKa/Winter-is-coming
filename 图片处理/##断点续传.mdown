@@ -1,1 +1,71 @@
+
+http的网络请求中本身就已经具备了分片上传功能，当传输的文件比较大时，http协议自动会将文件切片（分块）
+
 ##断点续传
+
+断点续传分为上传和下载。协议主要是FTP和HTTP协议。
+HTTP协议主要依赖头部定义的Rang来完成。
+request header 中有Rang:byte= 120865
+response header 中有Content-Rang:byte 1208765-20489997/20489998
+
+###NSURLSession
+使用
+```objective-c
+    - (void)cancelByProducingResumeData:(void (^)(NSData *resumeData))completionHandler;
+    - (NSURLSessionDownloadTask *)downloadTaskWithResumeData:(NSData *)resumeData;
+```
+
+###直接使用HTTP
+首先必需在暂停时记录下当前已接收的文件长度，在下一次开始时设置HTTP header里的`Range`：
+
+```objective-c
+    NSString *range = [NSString stringWithFormat:@"bytes=%lld-", self.receivedLength];
+    [request setValue:range forHTTPHeaderField:@"Range"];
+```
+
+###切片
+
+获取其中一个切片
+
+-(void)readDataWithChunk:(NSInteger)chunk file:(CNFile*)file{
+
+总片数的获取方法：
+
+int offset =1024*1024;（每一片的大小是1M）
+
+NSInteger chunks = (file.fileSize%1024==0)?((int)(file.fileSize/1024*1024)):((int)(file.fileSize/(1024*1024) + 1));
+
+NSLog(@"chunks = %ld",(long)chunks);
+
+将文件分片，读取每一片的数据：
+
+NSData* data;
+
+NSFileHandle *readHandle = [NSFileHandle fileHandleForReadingAtPath:file.filePath];
+
+[readHandle seekToFileOffset:offset * chunk];
+
+data = [readHandle readDataOfLength:offset];
+
+}
+
+####步骤：
+- 切片处理
+- 获取了每一片要上传的数据，然后询问服务器，该片是否已经存在
+- 上传
+- 修改上传成功chunk的flag标志
+- 查看是否所有片的flag都已经置finish，如果都已经finishi，说明该文件上传完成，那么删除该文件，上传下一个文件或者结束。
+- 如果没有都finish，那么看本地下一chunk对用的flag是否是wait，是wait则上传
+
+
+####采用并发上传
+提高了上传效率，并充分利用了网络带宽。
+
+dispatch_async(dispatch_queue_t queue, ^{
+
+[me readDataWithChunk: chunk];
+
+})
+
+
+

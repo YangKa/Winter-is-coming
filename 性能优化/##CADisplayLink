@@ -6,3 +6,10 @@ CADisplay与NSTimer有什么不同
   NSTimer会由于加入runloop被阻塞而推迟，也可以通过设置tolerance属性设置容忍延迟范围。
 2.CADisplayLink使用场景专一，适合UI的不停重绘，比如自定义动画引擎或者视频播放的渲染。
   NSTimer使用范围比较广泛，用于各种定时任务。
+
+
+- CADisplayLink可以一次加入多个mode。
+- 一个以帧间隔为单位，一个以时间为单位。
+- 帧丢失CADispalyLink会直接跳过改帧，帧丢失或任务超时NSTimer只会延迟执行。
+- CADisplayLink的任务调用是通过屏幕每帧刷新结束的Vsync信号来通知的。NSTimer是通过加入的runloop循环来调用的。
+
