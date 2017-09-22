@@ -1,0 +1,21 @@
+##通知：
+
+###用户通知
+
+####Types: 
+1.本地通知
+2.远程通知
+
+####Framework: UserNotifications
+
+###特殊通知
+
+####Types: 
+
+1.PKPushTypeVoIP (VoIP invitations)
+2.PKPushTypeComplication (WatchOS complication updates)
+3.PKPushTypeFileProvider (File provider change notifications) 
+
+####Framework: UserNotifications
+
+- PushKit Notification 不会展示给用户，也不会有气泡、提示、声音
