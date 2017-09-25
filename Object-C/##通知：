@@ -1,0 +1,86 @@
+##通知：
+
+###用户通知(APNs)
+
+####Types: 
+1.本地通知
+2.远程通知
+
+####Framework: UserNotifications
+
+- 能用silent用户通知在后台更新APP，但不能启动。
+
+
+###特殊通知
+
+####Framework: PushKit
+
+####Types: 
+
+1.PKPushTypeVoIP (VoIP invitations)
+2.PKPushTypeComplication (WatchOS complication updates)
+3.PKPushTypeFileProvider (File provider change notifications) 
+
+PKPushTypeComplication: ios9+）
+1.发送更新数据给watch app，如果APP没有激活，该通知不会发送
+2.每天发出的pushs数量有限制，超出部分将不会被发送
+3.处理通知的时间与分配更新自己的时间预算想当，处理高通知是不要启动任何长时间运行的任务。建议波爱护所有必要的数据在有效负载中。以便数据能快速处理和发送到你的watch app上。
+
+PKPushTypeFileProvider：
+发送通知去更新File Provider扩展。（ios11+）
+
+PKPushTypeVoIP： （ios8+）
+
+###PKPushCredentials
+封装了和app相关的推送token和type两个属性
+
+###PKPushPayload
+包含远程推送的信息。
+
+- dictionaryPayload
+里面包含符合json text编码格式的任意字段数据。
+
+- type 推送类型
+
+###PKPushRegistry 
+注册和处理通知
+
+note：在注册推送类型前必须先实现代理
+
+- (void) registerForVoIPPushes {
+   self.voipRegistry = [[PKPushRegistry alloc] initWithQueue:nil];
+   self.voipRegistry.delegate = self;
+ 
+   // Initiate registration.
+   self.voipRegistry.desiredPushTypes = [NSSet setWithObject:PKPushTypeVoIP];
+}
+
+当注册成功代理会收到对应的推送token，然后将token发送到我们自己的服务器上，方便我们给app发送通知。
+
+- (instancetype)initWithQueue:(dispatch_queue_t)queue;
+建议使用一个串行队列去执行代理方法。赋值nil代理方法会直接在main queue中运行。
+
+- (NSData *)pushTokenForType:(PKPushType)type;
+注册成功后会将token进行备份一份在本地缓存中，可以通过该方法进行读取。
+
+
+###PKPushRegistryDelegate
+
+- pushRegistry:didInvalidatePushTokenForType:
+Notifies the delegate that a push token has been invalidated.
+
+- pushRegistry:didReceiveIncomingPushWithPayload:forType:withCompletionHandler:
+Notifies the delegate that a remote push has been received.
+
+- pushRegistry:didUpdatePushCredentials:forType:
+Notifies the delegate when the push credentials have been updated.
+Required.
+
+
+特点：
+- PushKit Notification 不会展示给用户，也不会有气泡、提示、声音
+
+- 可以通过通知直接启动未激活的APP。
+- 当app处于后台时，也能有时间去处理通知。
+- app只在收到通知时才唤醒，不用一直保持接收状态，能延迟电池寿命。
+- 与用User notification相比，能包含更多的数据。
