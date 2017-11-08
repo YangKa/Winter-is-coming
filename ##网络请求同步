@@ -1,0 +1,86 @@
+##网络请求同步
+
+###单个同步请求
+
+####NSURLConnection
+
+- NSURLConnection中提供一个同步请求的API：
+
+```
++ (NSData*)sendSynchronousRequest:(NSURLRequest*)request returningResponse:(NSURLResponse**)response error:(NSError**)error
+```
+
+注意点：
+1.如果在主线程阻塞时间过长，可能被watchdog kill的可能。建议在子线程中调用。
+2.请求发出后无法取消
+3.已经被deprecate
+
+- 采用信号量机制Dispatch_semaphonre （一种资源分配的抽象方式）
+
+```
+1. dispatch_semaphore_t semaphore = dispatch_semaphore_create(value);
+2. dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+3.dispatch_semaphore_signal(semaphore);
+```
+栗子：
+```
+// 1.创建信号量
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+    NSLog(@"0");
+    // 开始异步请求操作（部分代码略）
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSLog(@"1");
+        // This function returns non-zero if a thread is woken. Otherwise, zero is returned.
+        // 2.在网络请求结束后发送通知信号
+        dispatch_semaphore_signal(semaphore);
+    });
+    // Returns zero on success, or non-zero if the timeout occurred.
+    // 3.发送等待信号
+    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    NSLog(@"2");
+
+    // print 0、1、2
+```
+
+
+###多个接口返回数据之间或整体存在依赖关系
+
+采用dispatch_group。
+
+dispatch_group_async对于网络请求而言，请求发出时它就执行完成。
+
+对于dispatch_group_enter，必须执行dispatch_group_leave，它才结束。
+
+- 需要各请求串行执行，最后再执行特定操作
+
+```
+// 创建 dispatch 组
+    dispatch_group_t group = dispatch_group_create();
+
+    // 第一个请求：
+    dispatch_group_enter(group);
+    [self sendGetAddressByPinWithURLs:REQUEST(@"getAddressByPin.json") completionHandler:^(NSDictionary * _Nullable data, NSError * _Nullable error) {
+        NSArray *addressList = [TXAddressModel mj_objectArrayWithKeyValuesArray:data[@"addressList"]];
+        self.addressList = addressList;
+        dispatch_group_leave(group);
+    }];
+
+    // 第二个请求
+    dispatch_group_enter(group);
+    [self sendCurrentOrderWithURLs:REQUEST(@"currentOrder.json") completionHandler:^(NSDictionary * _Nullable data, NSError * _Nullable error) {
+        TXCurrentOrderModel *currentOrderModel = [TXCurrentOrderModel mj_objectWithKeyValues:data];
+        self.currentOrderModel = currentOrderModel;
+        dispatch_group_leave(group);
+    }];
+
+    // 当上面两个请求都结束后，回调此 Block
+    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        NSLog(@"OVER:%@", [NSThread currentThread]);
+        [self setupOrderDataSource];
+    });
+
+```
+
+- 需要各请求并行执行，最后再执行特点操作
+
+	采用dispatch_group_async
