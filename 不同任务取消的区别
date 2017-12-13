@@ -1,0 +1,23 @@
+
+cancel方法调用区别
+
+NSOperation 
+
+对于已经执行的operation，不会停止执行，只会修改它的执行状态state。对于在queue中还未执行的operation，会被移除队列。
+
+
+NSURLConnection
+
+会取消一个异步加载的请求，它的delegate方法将都不会被调用。并会主动调用下请求失败代理。
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
+  if ([error code] != NSURLErrorCancelled) {
+      //当一个异步请求被取消时
+  }else{
+      //do something
+  }
+}
+
+NSURLSessionTask
+
+会直接标记task标记为canceled并调用URLSession:task:didCompleteWithError:，在error中NSURLErrorDomain=NSURLErrorCancelled。
+在取消操作被确定前还会有消息发送到代理方法。
