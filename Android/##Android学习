@@ -1,0 +1,171 @@
+##Android学习
+
+####1.constraintLayout 
+
+约束布局，通过拖拉控件绘制界面
+
+####2.尺寸单位
+
+px: 像素，不同设备显示效果相同
+
+sp: scale pixels(放大像素)。主要用于字体显示。
+DP:
+
+DPI：指在一个inch物理长度内有多少个dot。Android设备用DPI来表示屏幕密度。
+in:
+mm:
+pt:
+
+
+####3.日志打印
+
+android.util.Log
+
+- Log.v 黑色  verbose，任何消息都会输出，平时使用
+
+- Log.d 蓝色  debug，调试消息
+
+- Log.i 绿色  information，提示性的消息
+
+- Log.w 橙色  warning，警告消息
+
+- Log.e 红色  error，错误信息
+
+####4.ScrollView只能有一个子节点，它和ListView嵌套会产生冲突
+
+####5.四大组件：Activity、Service、broadca、content povider
+
+####6.ListView 可添加多个headerView或footerView，但会占用item的position。
+
+- 通过在添加时设置addHeaderView(headView, null, false) 来禁止响应itemClick的点击事件。或者单独给他添加OnClickListener。
+- 给ListView设置的Adapter和通过ListView.getgetAdapter()是不同的，后者是在添加完header或footer后生成的temp adapter。
+- 在setOnItemClickListener中，因为 i 是添加头和尾部后改变的值，获取数据元素时应该直接取listView.getAdapter().getItem(i)，这样就不要管i可能越界的问题。
+
+####7.管理layout下xml文件
+
+- 在layout下新建模块文件夹，然后在每个文件夹下新建命名为layout的文件夹
+- 在build.gradle下的android中添加
+	sourceSets {
+	        main {
+	            res.srcDirs = [
+	                    'src/main/res/layout/Module1',
+	                    'src/main/res/layout/Module2',
+	                    'src/main/res/layout/Module3',
+	                    'src/main/res/layout',
+	                    'src/main/res/'
+	            ]
+	        }
+	    }
+- build一下
+- 然后发现无效，只能注意xml的命名方式，建议将模块名作为xml文件的命名前缀。
+
+####8.动画切换activity
+
+- 必须在startActivity和finish后立刻调用，单独一方调用无效
+overridePendingTransition(in_animation, out_animation)
+
+
+####9.导航栏的返回键
+
+- 显示返回键
+	getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+- 显示指明返回页，这样不用监听返回键点击事件（效果是父页面覆盖掉子页面）
+	在AndroidManifest.xml中配置
+	<activity
+    android:name=".ui.activity.childActivity"
+    android:parentActivityName="parentActivity"/>
+- 覆写onOptionsItemSelected方法（子页面消失，显示父页面）
+	@Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                UIHelper.returnHome(this);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    创建并调用UIHelper.returnHome方法：
+    public static void returnHome(Context context) {
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        context.startActivity(intent);
+    }
+
+####10.传递对象的方式
+
+- 让book对象遵守 Serializable
+	Intent intent=new Intent(this,SecondActivity.class);   
+  	intent.putExtra("book",book);   
+  	startActivity(intent);  
+
+- 转化为JSON字符串
+	Intent intent=new Intent(this,SecondActivity.class);  
+	intent.putExtra("book",new Gson().toJson(book)); 
+
+	String bookJson=getIntent().getStringExtra("book");
+	Book book=new Gson().fromJson(bookJson,Book.class)
+
+- 使用Parcelable
+
+	实现Parcelable接口需要实现两个方法
+
+	describeContents方法。内容接口描述，默认返回0就可以;
+	writeToParcel方法。将传递的数据打包到Parcel容器中。
+	除了要实现这两个方法还必须创建一个Parcelable.Creator接口的实例，用于读取Parcel容器中的数据
+
+性能：parcelable > Serializable > Json字符串 
+简化：利用插件或三方库简化parcelabel的使用
+
+####11.基类Activity
+
+理由：
+- 统一风格，易调整 （toast、系统栏颜色、进出动画等）
+- 细化基础生命周期方法，减少代码量
+
+封装点：
+ - 生命周期 (运行Activity、按下返回按键、按下电源键、activity跳转、再次打开、屏幕旋转等)
+ - 进出动画
+ - 状态栏的设置
+ - 屏幕旋转如何保持
+ - android:configChanges属性
+
+基类有两个
+class BaseAppCompatActivity
+class BaseActivity extends BaseAppCompatActivity
+
+####12.隐藏/显示ActionBar
+getSupportActionBar().hide();
+getSupportActionBar().show();
+
+####13.layout_gravity是相对父布局的设置，gravity是对自身内容的布局设置
+
+####14.线程实现方式
+- 继承Thread类，覆写本类的run()就可以实现多线程操作。只能继承一个类，比较局限
+- 实现Runnable接口，覆写本类的run()
+
+####15.启动界面设置
+
+- 热启动：应用在后台时激活。
+- 冷启动：后台没有该应用的进程，启动时会先创建和初始化application类，在创建和初始化activity类
+
+冷启动由于要初始化或导致启动时出现白屏或黑屏。
+
+添加style主题，设置window背景和启动背景图片相同，设置启动activity的为该主题，以此作为启动的过渡界面。
+缺点：该图片内存无法释放
+
+v7后的activity事继承 AppCompatActivity，全屏通过style来控制
+    <style name="StartTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowNoTitle">true</item>
+        //设置背景图片
+        <item name="android:windowBackground">@drawable/start_page</item>
+    </style>
+但会直接覆盖掉状态栏
+
+####14.沉浸式模式（Immersive Mode）
+
+
+
+
+

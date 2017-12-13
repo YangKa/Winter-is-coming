@@ -1,0 +1,11 @@
+
+##UIFoundation
+
+- NSHashTable
+
+	效仿NSSet，默认可变，在对象和内存处理方面更加灵活。
+	采用hash表保存对对象的弱引用，并在对象被销毁之后正确的移除。
+
+- NSMapTable
+
+	效仿NSDictionary,默认行为是retain键而不是拷贝。对于存储没有遵守NSCopying协议的键占优势。

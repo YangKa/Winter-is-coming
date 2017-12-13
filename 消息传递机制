@@ -1,0 +1,13 @@
+消息传递机制
+
+delegate	相对松散，发送者需要知道接受者
+
+notification   单向的，完全松散
+
+block  可完全替代delegate，可读性强，但易导致recycle
+
+KVO	需要知道被观察者和被观察者的生命周期
+
+target-action 主要用于UI事件，参数传递比较局限
+
+strong可变对象

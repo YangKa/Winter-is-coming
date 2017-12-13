@@ -1,0 +1,17 @@
+##请求并行改为串行
+
+1.dispatch_group_t
+
+dispatch_group_enter
+dispatch_group_leave
+dispatch_group_notify
+
+2.dispatch_semophore_t
+
+dispatch_semophore_create
+dispatch_semophore_signal
+dispatch_semophore_wait
+
+3.NSOperationQueue
+addDependency:
+添加依赖关系
