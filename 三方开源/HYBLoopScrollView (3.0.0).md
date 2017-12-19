@@ -1,5 +1,9 @@
 ## HYBLoopScrollView (3.0.0)
 
+结构
+
+![HYBLoopScrollView结构](./HYBLoopScrollView.png)
+
 ### UIView+HYBUIViewCommon
 
 方便访问和设置UIView类frame属性和border、cornerRadius样式的category
