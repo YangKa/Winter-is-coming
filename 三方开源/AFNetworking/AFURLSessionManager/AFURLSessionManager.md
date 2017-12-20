@@ -1,5 +1,9 @@
 ## AFURLSessionManager
 
+结构
+
+![类机构](./AFURLSessionManager.png)
+
 #### static方法
 
 以static和dispatch_once的方式创建了一个串行队列、一个并行队列、一个dispatch_group。
@@ -83,6 +87,10 @@ NSURLSessionDelegate、NSURLSessionTaskDelegate、NSURLSessionDataDelegate、NSU
 //在ios 7.0中有一个bug，在后台session上创建上传任务时有时返回的是nil。通过设置该属性来判断是否需要进行请求重建。
 @property (nonatomic, assign) BOOL attemptsToRecreateUploadTasksForBackgroundSessions;
 ```
+
+#### 协议和任务类型的继承关系
+
+![继承关系图](./ProtocolAndTask.png)
 
 #### URLSessionManager的创建
 

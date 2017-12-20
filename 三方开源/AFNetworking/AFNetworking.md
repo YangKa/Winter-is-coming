@@ -1,9 +1,32 @@
 ## AFNetworking
 
-
+结构图
+![](./AFNetworking.png)
 
 AFNetworking共分为5个模块，分别为NSURLSession请求管理中心、Security安全验证、Serialization请求和响应数据解析、Reachablility网络状态管理、UIKit分类扩展。
 AFN之前是基于NSURLConnection，iOS 7.0 之后开始全面支持NSURLSession。
+
+AFNetworking
+`头文件，方便引用其它文件。`
+
+AFURLSessionManager
+`核心类，基本实现了核心功能。负责请求的建立、管理、销毁、安全、重定向、请求重启等功能。`
+`负责实现对NSURLSession和NSURLSessionTask的封装。`
+
+AFHTTPSessionManager
+`是AFURLSessionManager的子类，实现对HTTP请求的优化封装，方便使用。`
+
+AFURLRequestSerialization
+`对请求头的编码解码、序列化、简化请求拼接过程等。`
+
+AFURLResponseSerialization
+`对返回数据的序列化、编码解码、数据处理等。`
+
+AFSecurityPolicy
+`用于请求的安全认证。比如https的证书验证。`
+
+AFNetworkReachabilityManager
+`用于监听网络状态的变化。`
 
 ##### 为什么使用NSURLSession
 AFN以前的版本是基于NSURLConnection，随着iOS 7.0NSURLSession的推出，3.0以后完全开始支持NSURLSession。
