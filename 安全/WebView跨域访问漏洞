@@ -1,0 +1,44 @@
+WebView跨域访问漏洞
+
+介绍：
+
+iOS平台跨域访问漏洞成因是由于UIWebView开启了WebKitAllowUniversalAccessFromFileURLs和WebKitAllowFileAccessFromFileURLs选项。
+
+对于开启WebKitAllowFileAccessFromFileURLs的WebView允许加载file URL的页面，同时页面的js代码可以通过file URL形式访问本地文件，从而造成沙盒内任意文件读取；而开启WebKitAllowUniversalAccessFromFileURLs的WebView则允许使用file URL加载的页面访问其他的源（如HTTP或HTTPS），通过此选项攻击者就可以将上一步读取到的文件内容发送到远端服务器，从而实现了“克隆”攻击和照片窃取。
+
+与Android平台不同的是iOS中UIWebView的WebKitAllowUniversalAccessFromFileURLs和WebKitAllowFileAccessFromFileURLs默认开启，无需开发人员单独配置。这就导致攻击者只要保证目标APP使用file URL加载web页面就可以实现攻击。
+
+在iOS 8.0和OS X 10.10之后Apple提供了WKWebView代替原有的UIWebView，与UIWebView相比WKWebView在性能、内存消耗及安全方面具有很多优势，同时WKWebView默认allowFileAccessFromFileURLs和allowUniversalAccessFromFileURLs选项为false。
+
+攻击条件：
+
+1.APP中UIWebView或开启allowFileAccessFromFileURLs和allowUniversalAccessFromFileURLs的WKWebView以file://方式加载页面
+
+2.攻击者可以控制被加载页面内容
+
+举个🌰：
+
+var localfile = "/etc/hosts" //可以访问手机网络信息
+var xhr = new XMLHttpRequest();
+xhr.onreadystatechange=function(){
+
+    if (xhr.readyState==4)
+    {
+          alert(xhr.responseText);
+    }
+}
+
+try {
+    xhr.open("GET", localfile, true);
+    xhr.send();
+}
+catch (ex) {
+        alert(ex.message);
+} 
+
+如果将localfile设置为"/User/Media/DCIM/100APPLE/xxx.JPG"即可以打开本地照片，设置成相对路径即可打开沙盒内的任意文件。
+
+修复：
+使用WKWebView（默认设置）替换UIWebView。
+非业务必须本地页面使用文本形式查看。
+涉及用户身份认证信息应保存在keychain内，其他相对敏感的文件加密保存于沙盒内。
