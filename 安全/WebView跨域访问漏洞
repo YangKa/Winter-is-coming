@@ -4,7 +4,8 @@ WebView跨域访问漏洞
 
 iOS平台跨域访问漏洞成因是由于UIWebView开启了WebKitAllowUniversalAccessFromFileURLs和WebKitAllowFileAccessFromFileURLs选项。
 
-对于开启WebKitAllowFileAccessFromFileURLs的WebView允许加载file URL的页面，同时页面的js代码可以通过file URL形式访问本地文件，从而造成沙盒内任意文件读取；而开启WebKitAllowUniversalAccessFromFileURLs的WebView则允许使用file URL加载的页面访问其他的源（如HTTP或HTTPS），通过此选项攻击者就可以将上一步读取到的文件内容发送到远端服务器，从而实现了“克隆”攻击和照片窃取。
+对于开启WebKitAllowFileAccessFromFileURLs的WebView允许加载file URL的页面，同时页面的js代码可以通过file URL形式访问本地文件，从而造成沙盒内任意文件读取；
+而开启WebKitAllowUniversalAccessFromFileURLs的WebView则允许使用file URL加载的页面访问其他的源（如HTTP或HTTPS），通过此选项攻击者就可以将上一步读取到的文件内容发送到远端服务器，从而实现了“克隆”攻击和照片窃取。
 
 与Android平台不同的是iOS中UIWebView的WebKitAllowUniversalAccessFromFileURLs和WebKitAllowFileAccessFromFileURLs默认开启，无需开发人员单独配置。这就导致攻击者只要保证目标APP使用file URL加载web页面就可以实现攻击。
 
@@ -19,7 +20,7 @@ iOS平台跨域访问漏洞成因是由于UIWebView开启了WebKitAllowUniversal
 举个🌰：
 
 var localfile = "/etc/hosts" //可以访问手机网络信息
-var xhr = new XMLHttpRequest();
+var xhr = new XMLHttpRequest(); 
 xhr.onreadystatechange=function(){
 
     if (xhr.readyState==4)
